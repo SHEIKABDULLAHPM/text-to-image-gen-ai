@@ -2,7 +2,8 @@
 import axios from 'axios';
 import { ImageSize, ImageFormat } from '../types';
 
-const API_BASE = 'http://localhost:5000';
+// Use environment variable for both dev/prod
+const baseURL = import.meta.env.VITE_API_BASE_URL;
 
 export const imageGenerationService = {
   generateImage: async ({
@@ -15,7 +16,7 @@ export const imageGenerationService = {
     format: ImageFormat;
   }) => {
     try {
-      const res = await axios.post(`${API_BASE}/generate`, {
+      const res = await axios.post(`${baseURL}/generate`, {
         prompt,
         size,
         format
@@ -24,7 +25,7 @@ export const imageGenerationService = {
       if (res.data.image) {
         return {
           success: true,
-          id: Date.now().toString(), // Temporary ID
+          id: Date.now().toString(),
           imageUrl: `data:image/${format};base64,${res.data.image}`
         };
       }
@@ -41,7 +42,7 @@ export const imageGenerationService = {
 
   getHistory: async () => {
     try {
-      const res = await axios.get(`${API_BASE}/history`);
+      const res = await axios.get(`${baseURL}/history`);
       return { success: true, history: res.data };
     } catch (err: unknown) {
       if (err instanceof Error) {
