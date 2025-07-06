@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// https://vitejs.dev/config/
 export default defineConfig({
   root: ".",
   plugins: [react()],
@@ -9,10 +8,17 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
   server: {
-  proxy: {
-    '/generate': 'http://localhost:5000',
-    '/history': 'http://localhost:5000'
+    proxy: {
+      '/generate': {
+        target: `http://localhost:${process.env.PORT || 5000}`,
+        changeOrigin: true,
+        secure: false,
+      },
+      '/history': {
+        target: `http://localhost:${process.env.PORT || 5000}`,
+        changeOrigin: true,
+        secure: false,
+      },
+    }
   }
-}
-
 });
