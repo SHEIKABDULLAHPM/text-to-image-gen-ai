@@ -11,6 +11,7 @@ load_dotenv()
 
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:5173"], supports_credentials=True)
+
 # AWS credentials
 aws_access_key = os.getenv("AWS_ACCESS_KEY_ID")
 aws_secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
@@ -35,17 +36,15 @@ def index():
 def generate_image():
     data = request.get_json()
     prompt = data.get("prompt")
-    size = data.get("size", "512x512")   # default fallback
-    format_ = data.get("format", "png")  # default fallback
+    size = data.get("size", "512x512")
+    format_ = data.get("format", "png")
 
     if not prompt:
         return jsonify({"error": "Prompt is required"}), 400
 
     try:
-        # Parse size into width and height
         width, height = map(int, size.lower().split("x"))
 
-        # Prepare request body for Bedrock
         body = json.dumps({
             "taskType": "TEXT_IMAGE",
             "textToImageParams": {
@@ -60,7 +59,6 @@ def generate_image():
             }
         })
 
-        # Invoke Bedrock model
         response = bedrock_client.invoke_model(
             modelId="amazon.titan-image-generator-v1",
             body=body,
@@ -71,7 +69,6 @@ def generate_image():
         response_body = json.loads(response['body'].read())
         base64_image = response_body['images'][0]
 
-        # Save to in-memory history
         image_entry = {
             "prompt": prompt,
             "image": base64_image,
@@ -88,7 +85,9 @@ def generate_image():
 
 @app.route("/history", methods=["GET"])
 def get_history():
-    return jsonify(image_history[::-1])  # Return newest first
+    return jsonify(image_history[::-1])  # Newest first
 
+# ✅ Only run if this is the main file
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
