@@ -16,6 +16,7 @@ CORS(app,
      origins=[
          "http://localhost:5173",
          "https://text-to-image-gen-ai.onrender.com",
+         "https://text-to-image-gen-ai-git-main-sheik-abdullah-p-ms-projects.vercel.app/"
      ],
      supports_credentials=True,
      allow_headers=["Content-Type"],
