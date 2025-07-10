@@ -10,7 +10,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:5173"], supports_credentials=True)
+
+# CORS for local and production (e.g., Vercel)
+CORS(app,
+     origins=[
+         "http://localhost:5173",
+         "https://text-to-image-gen-ai-sheik-abdullah-p-ms-projects.vercel.app/",
+     ],
+     supports_credentials=True,
+     allow_headers=["Content-Type"],
+     methods=["GET", "POST", "OPTIONS"])
+
 
 # AWS credentials
 aws_access_key = os.getenv("AWS_ACCESS_KEY_ID")
@@ -25,7 +35,7 @@ bedrock_client = boto3.client(
     aws_secret_access_key=aws_secret_key
 )
 
-# In-memory history (you can persist this to file or DB if needed)
+# In-memory history (can persist to file/db if needed)
 image_history = []
 
 @app.route("/", methods=["GET"])
@@ -35,11 +45,14 @@ def index():
 @app.route("/generate", methods=["POST"])
 def generate_image():
     data = request.get_json()
+    print("✅ POST /generate called with:", data)
+
     prompt = data.get("prompt")
     size = data.get("size", "512x512")
     format_ = data.get("format", "png")
 
     if not prompt:
+        print("❌ Prompt missing in request")
         return jsonify({"error": "Prompt is required"}), 400
 
     try:
@@ -76,18 +89,21 @@ def generate_image():
             "size": size,
             "format": format_
         }
+
         image_history.append(image_entry)
 
+        print("🎉 Image generated successfully for:", prompt)
         return jsonify({"image": base64_image})
 
     except Exception as e:
+        print("❌ Error during image generation:", str(e))
         return jsonify({"error": str(e)}), 500
 
 @app.route("/history", methods=["GET"])
 def get_history():
     return jsonify(image_history[::-1])  # Newest first
 
-# ✅ Only run if this is the main file
+# Run locally or on Render
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
