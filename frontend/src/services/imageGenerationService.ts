@@ -1,8 +1,9 @@
 // src/services/imageGenerationService.ts
+
 import axios from 'axios';
 import { ImageSize, ImageFormat } from '../types';
 
-// Use environment variable for both dev/prod
+// Read the backend URL from environment variable
 const baseURL = import.meta.env.VITE_API_BASE_URL;
 
 export const imageGenerationService = {
@@ -16,17 +17,17 @@ export const imageGenerationService = {
     format: ImageFormat;
   }) => {
     try {
-      const res = await axios.post(`${baseURL}/generate`, {
-        prompt,
-        size,
-        format
-      });
+      const response = await axios.post(
+        `${baseURL}/generate`,
+        { prompt, size, format },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
 
-      if (res.data.image) {
+      if (response.data.image) {
         return {
           success: true,
           id: Date.now().toString(),
-          imageUrl: `data:image/${format};base64,${res.data.image}`
+          imageUrl: `data:image/${format};base64,${response.data.image}`
         };
       }
 
@@ -34,22 +35,20 @@ export const imageGenerationService = {
     } catch (err: unknown) {
       if (err instanceof Error) {
         return { success: false, error: err.message };
-      } else {
-        return { success: false, error: 'Unknown error occurred' };
       }
+      return { success: false, error: 'Unknown error occurred' };
     }
   },
 
   getHistory: async () => {
     try {
-      const res = await axios.get(`${baseURL}/history`);
-      return { success: true, history: res.data };
+      const response = await axios.get(`${baseURL}/history`);
+      return { success: true, history: response.data };
     } catch (err: unknown) {
       if (err instanceof Error) {
         return { success: false, error: err.message };
-      } else {
-        return { success: false, error: 'Unknown error occurred' };
       }
+      return { success: false, error: 'Unknown error occurred' };
     }
   }
 };
