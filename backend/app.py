@@ -15,7 +15,7 @@ app = Flask(__name__)
 CORS(app,
      origins=[
          "http://localhost:5173",
-         "https://text-to-image-gen-ai-sheik-abdullah-p-ms-projects.vercel.app/",
+         "https://text-to-image-gen-ai.onrender.com",
      ],
      supports_credentials=True,
      allow_headers=["Content-Type"],
