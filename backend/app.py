@@ -11,24 +11,24 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# CORS for local and production (e.g., Vercel)
+# ✅ CORS setup for local + deployed (Vercel + Render)
 CORS(app,
      origins=[
          "http://localhost:5173",
          "https://text-to-image-gen-ai.onrender.com",
-         "https://text-to-image-gen-ai-git-main-sheik-abdullah-p-ms-projects.vercel.app/"
+         "https://text-to-image-gen-ai-git-main-sheik-abdullah-p-ms-projects.vercel.app"
      ],
      supports_credentials=True,
      allow_headers=["Content-Type"],
-     methods=["GET", "POST", "OPTIONS"])
+     methods=["GET", "POST", "OPTIONS"]
+)
 
-
-# AWS credentials
+# ✅ AWS credentials
 aws_access_key = os.getenv("AWS_ACCESS_KEY_ID")
 aws_secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 aws_region = os.getenv("AWS_REGION", "us-east-1")
 
-# Initialize Bedrock client
+# ✅ Bedrock client
 bedrock_client = boto3.client(
     service_name="bedrock-runtime",
     region_name=aws_region,
@@ -36,12 +36,13 @@ bedrock_client = boto3.client(
     aws_secret_access_key=aws_secret_key
 )
 
-# In-memory history (can persist to file/db if needed)
+# ✅ In-memory image history
 image_history = []
 
 @app.route("/", methods=["GET"])
 def index():
     return jsonify({"message": "AI Image Generator Backend is running!"})
+
 
 @app.route("/generate", methods=["POST"])
 def generate_image():
@@ -100,11 +101,13 @@ def generate_image():
         print("❌ Error during image generation:", str(e))
         return jsonify({"error": str(e)}), 500
 
+
 @app.route("/history", methods=["GET"])
 def get_history():
     return jsonify(image_history[::-1])  # Newest first
 
-# Run locally or on Render
+
+# ✅ Entry point for local or hosted deployment (e.g. Render)
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
