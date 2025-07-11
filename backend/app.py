@@ -12,16 +12,17 @@ load_dotenv()
 app = Flask(__name__)
 
 # ✅ CORS setup for local + deployed (Vercel + Render)
-CORS(app,
-     origins=[
-         "http://localhost:5173",
-         "https://text-to-image-gen-ai.onrender.com",
-         "https://text-to-image-gen-ai-git-main-sheik-abdullah-p-ms-projects.vercel.app"
-     ],
-     supports_credentials=True,
-     allow_headers=["Content-Type"],
-     methods=["GET", "POST", "OPTIONS"]
-)
+CORS(app, resources={r"/*": {
+    "origins": [
+        "http://localhost:5173",
+        "https://text-to-image-gen-ai-git-main-sheik-abdullah-p-ms-projects.vercel.app"
+    ]
+}}, supports_credentials=True)
+
+@app.before_request
+def handle_options():
+    if request.method == 'OPTIONS':
+        return '', 204
 
 # ✅ AWS credentials
 aws_access_key = os.getenv("AWS_ACCESS_KEY_ID")
@@ -107,7 +108,6 @@ def get_history():
     return jsonify(image_history[::-1])  # Newest first
 
 
-# ✅ Entry point for local or hosted deployment (e.g. Render)
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)

@@ -25,7 +25,6 @@ def main():
 
     # Prompt and config
     model_id = "amazon.titan-image-generator-v1"
-    prompt = "A lion and a tigress gently touching noses in a quiet jungle clearing, under soft moonlight, showing affection like a kiss, surrounded by natural foliage and calm night atmosphere."
     accept = "application/json"
     content_type = "application/json"
 
@@ -33,7 +32,7 @@ def main():
     body = json.dumps({
         "taskType": "TEXT_IMAGE",
         "textToImageParams": {
-            "text": prompt
+            "text": "prompt"
         },
         "imageGenerationConfig": {
             "numberOfImages": 1,
