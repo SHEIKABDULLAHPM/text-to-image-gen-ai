@@ -24,7 +24,7 @@ def main():
     )
 
     # Prompt and config
-    model_id = "amazon.titan-image-generator-v1"
+    model_id = "stabilityai/stable-diffusion-xl-base-1.0"
     accept = "application/json"
     content_type = "application/json"
 
