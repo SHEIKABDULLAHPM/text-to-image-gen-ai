@@ -7,7 +7,7 @@ import LoadingSpinner from './components/LoadingSpinner';
 import ErrorBoundary from './components/ErrorBoundary';
 import ErrorMessage from './components/ErrorMessage';
 import { imageGenerationService } from './services/imageGenerationService';
-import { GeneratedImage, ImageSize, ImageFormat, GenerationStatus } from './types';
+import { GeneratedImage, ImageSize, ImageFormat, GenerationStatus, ModelType } from './types';
 
 function App() {
   const [currentImage, setCurrentImage] = useState<GeneratedImage | null>(null);
@@ -52,7 +52,19 @@ function App() {
   }, []);
 
   const handleGenerateImage = useCallback(
-    async (prompt: string) => {
+    async ({
+      prompt,
+      steps,
+      guidanceScale,
+      seed,
+      model,
+    }: {
+      prompt: string;
+      steps: number;
+      guidanceScale: number;
+      seed?: number;
+      model: ModelType;
+    }) => {
       try {
         setStatus('generating');
         setError(null);
@@ -61,20 +73,26 @@ function App() {
           prompt,
           size,
           format,
+          steps,
+          guidanceScale,
+          seed,
+          model,
         });
 
         if (response.success && response.imageUrl) {
-          const newImage: GeneratedImage = {
+          const primaryImage: GeneratedImage = {
             id: response.id,
-            prompt,
+            prompt: response.enhancedPrompt || prompt,
             imageUrl: response.imageUrl,
             timestamp: Date.now(),
             size,
             format,
+            seed: response.seed,
+            model: response.model || model,
           };
 
-          setCurrentImage(newImage);
-          setImageHistory((prev) => [newImage, ...prev]);
+          setCurrentImage(primaryImage);
+          setImageHistory((prev) => [primaryImage, ...prev]);
           setStatus('success');
         } else {
           throw new Error(response.error || 'Failed to generate image');

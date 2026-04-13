@@ -4,3 +4,12 @@ __pycache__/
 backend/.env
 backend/.env
 backend/.env
+node_modules/
+frontend/node_modules/
+.venv/
+dist/
+frontend/dist/
+.pytest_cache/
+.mypy_cache/
+.DS_Store
+Thumbs.db

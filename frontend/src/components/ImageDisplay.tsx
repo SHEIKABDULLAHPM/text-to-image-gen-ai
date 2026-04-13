@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, Maximize2, RotateCcw, Share2 } from 'lucide-react';
+import { Download, Maximize2, RotateCcw } from 'lucide-react';
 import { GeneratedImage } from '../types';
 
 interface ImageDisplayProps {
@@ -33,23 +33,6 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ image, onDownload }) => {
       link.href = image.imageUrl;
       link.download = `generated-image-${image.id}.${image.format}`;
       link.click();
-    }
-  };
-
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'AI Generated Image',
-          text: image.prompt,
-          url: image.imageUrl
-        });
-      } catch (error) {
-        console.log('Error sharing:', error);
-      }
-    } else {
-      // Fallback to copying to clipboard
-      navigator.clipboard.writeText(image.imageUrl);
     }
   };
 
@@ -99,6 +82,16 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ image, onDownload }) => {
             <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
               {new Date(image.timestamp).toLocaleDateString()}
             </span>
+            {typeof image.seed === 'number' && (
+              <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm">
+                Seed: {image.seed}
+              </span>
+            )}
+            {image.model && (
+              <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm">
+                Model: {image.model}
+              </span>
+            )}
           </div>
 
           <div className="flex space-x-3">
@@ -108,14 +101,6 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ image, onDownload }) => {
             >
               <Download className="w-4 h-4" />
               <span>Download</span>
-            </button>
-            
-            <button
-              onClick={handleShare}
-              className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all"
-            >
-              <Share2 className="w-4 h-4" />
-              <span>Share</span>
             </button>
           </div>
         </div>

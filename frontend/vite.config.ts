@@ -11,8 +11,11 @@ export default defineConfig({
   },
   server: {
   proxy: {
-    '/generate': 'http://localhost:5000',
-    '/history': 'http://localhost:5000'
+    '/api': {
+      target: 'http://localhost:5000',
+      changeOrigin: true,
+      rewrite: (path) => path.replace(/^\/api/, ''),
+    }
   }
 }
 

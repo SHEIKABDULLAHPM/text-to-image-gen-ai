@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
 import { Send, Wand2, Settings as SettingsIcon } from 'lucide-react';
-import { GenerationStatus, ImageFormat, ImageSize } from '../types';
+import { GenerationStatus, ImageFormat, ImageSize, ModelType } from '../types';
 
 interface PromptInputProps {
-  onGenerate: (prompt: string) => void;
+  onGenerate: (request: {
+    prompt: string;
+    steps: number;
+    guidanceScale: number;
+    seed?: number;
+    model: ModelType;
+  }) => void;
   status: GenerationStatus;
   size: ImageSize;
   format: ImageFormat;
@@ -21,11 +27,22 @@ const PromptInput: React.FC<PromptInputProps> = ({
 }) => {
   const [prompt, setPrompt] = useState('');
   const [showSettings, setShowSettings] = useState(false);
+  const [steps, setSteps] = useState(4);
+  const [guidanceScale, setGuidanceScale] = useState(0);
+  const [seedInput, setSeedInput] = useState('');
+  const [model, setModel] = useState<ModelType>('turbo');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (prompt.trim() && status !== 'generating') {
-      onGenerate(prompt.trim());
+      const parsedSeed = seedInput.trim() ? Number(seedInput) : undefined;
+      onGenerate({
+        prompt: prompt.trim(),
+        steps,
+        guidanceScale,
+        seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined,
+        model,
+      });
       setPrompt('');
     }
   };
@@ -60,7 +77,7 @@ const PromptInput: React.FC<PromptInputProps> = ({
         </button>
 
         {showSettings && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium">Image Size</label>
               <select
@@ -86,6 +103,52 @@ const PromptInput: React.FC<PromptInputProps> = ({
                 <option value="webp">WEBP</option>
               </select>
             </div>
+
+            <div>
+              <label className="block text-sm font-medium">Model</label>
+              <select className="w-full p-2 border rounded" value={model} onChange={(e) => setModel(e.target.value as ModelType)}>
+                <option value="turbo">SD Turbo (Fast)</option>
+                <option value="sd15">Stable Diffusion 1.5</option>
+                <option value="sdxl">SDXL</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium">Steps ({steps})</label>
+              <input
+                type="range"
+                min={1}
+                max={40}
+                value={steps}
+                onChange={(e) => setSteps(Number(e.target.value))}
+                className="w-full"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium">Guidance Scale ({guidanceScale.toFixed(1)})</label>
+              <input
+                type="range"
+                min={0}
+                max={20}
+                step={0.5}
+                value={guidanceScale}
+                onChange={(e) => setGuidanceScale(Number(e.target.value))}
+                className="w-full"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium">Seed (optional)</label>
+              <input
+                type="number"
+                className="w-full p-2 border rounded"
+                placeholder="Random if empty"
+                value={seedInput}
+                onChange={(e) => setSeedInput(e.target.value)}
+              />
+            </div>
+
           </div>
         )}
 

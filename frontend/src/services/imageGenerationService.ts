@@ -1,25 +1,17 @@
 // src/services/imageGenerationService.ts
 
 import axios from 'axios';
-import { ImageSize, ImageFormat } from '../types';
+import { ImageGenerationRequest } from '../types';
 
-// Read the backend URL from environment variable
-const baseURL = import.meta.env.VITE_API_BASE_URL;
+// Read backend URL from environment variable and default to nginx-routed path.
+const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export const imageGenerationService = {
-  generateImage: async ({
-    prompt,
-    size,
-    format
-  }: {
-    prompt: string;
-    size: ImageSize;
-    format: ImageFormat;
-  }) => {
+  generateImage: async (payload: ImageGenerationRequest) => {
     try {
       const response = await axios.post(
         `${baseURL}/generate`,
-        { prompt, size, format },
+        payload,
         { headers: { 'Content-Type': 'application/json' } }
       );
 
@@ -27,12 +19,23 @@ export const imageGenerationService = {
         return {
           success: true,
           id: Date.now().toString(),
-          imageUrl: `data:image/${format};base64,${response.data.image}`
+          imageUrl: `data:image/${payload.format};base64,${response.data.image}`,
+          enhancedPrompt: response.data.enhancedPrompt,
+          seed: response.data.seed,
+          model: response.data.model,
         };
       }
 
       return { success: false, error: 'No image received' };
     } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        const backendError = err.response?.data?.error;
+        const backendDetails = err.response?.data?.details;
+        return {
+          success: false,
+          error: backendError || backendDetails || err.message,
+        };
+      }
       if (err instanceof Error) {
         return { success: false, error: err.message };
       }

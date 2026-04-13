@@ -5,13 +5,18 @@ export interface GeneratedImage {
   timestamp: number;
   size: ImageSize;
   format: ImageFormat;
+  seed?: number;
+  model?: ModelType;
 }
 
 export interface ImageGenerationRequest {
   prompt: string;
   size: ImageSize;
   format: ImageFormat;
-  style?: string;
+  steps?: number;
+  guidanceScale?: number;
+  seed?: number;
+  model?: ModelType;
 }
 
 export interface ImageGenerationResponse {
@@ -23,6 +28,7 @@ export interface ImageGenerationResponse {
 
 export type ImageSize = '512x512' | '768x768' | '1024x1024';
 export type ImageFormat = 'png' | 'jpeg' | 'webp';
+export type ModelType = 'turbo' | 'sd15' | 'sdxl';
 
 export type GenerationStatus = 'idle' | 'generating' | 'success' | 'error';
 

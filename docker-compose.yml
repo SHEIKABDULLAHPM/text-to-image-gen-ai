@@ -1,0 +1,80 @@
+services:
+  model-service:
+    build:
+      context: ./model-service
+      dockerfile: Dockerfile
+    environment:
+      MODEL_ID: ${MODEL_ID:-stabilityai/sd-turbo}
+      DEFAULT_MODEL_ALIAS: ${DEFAULT_MODEL_ALIAS:-turbo}
+      HUGGING_FACE_HUB_TOKEN: ${HUGGING_FACE_HUB_TOKEN:-}
+      MODEL_SERVICE_TOKEN: ${MODEL_SERVICE_TOKEN:-dev-model-token-change-me}
+      DEVICE: ${MODEL_DEVICE:-cpu}
+      DEFAULT_WIDTH: ${MODEL_DEFAULT_WIDTH:-512}
+      DEFAULT_HEIGHT: ${MODEL_DEFAULT_HEIGHT:-512}
+      DEFAULT_STEPS: ${MODEL_DEFAULT_STEPS:-4}
+      DEFAULT_GUIDANCE_SCALE: ${MODEL_DEFAULT_GUIDANCE_SCALE:-0.0}
+      MODEL_LOAD_MAX_RETRIES: ${MODEL_LOAD_MAX_RETRIES:-5}
+      MODEL_LOAD_RETRY_DELAY_SEC: ${MODEL_LOAD_RETRY_DELAY_SEC:-20}
+      HF_HUB_DOWNLOAD_TIMEOUT: ${HF_HUB_DOWNLOAD_TIMEOUT:-120}
+      HF_HUB_ETAG_TIMEOUT: ${HF_HUB_ETAG_TIMEOUT:-30}
+    volumes:
+      - model-cache:/root/.cache/huggingface
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/live')"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      PORT: 5000
+      MODEL_SERVICE_URL: http://model-service:8000
+      MODEL_SERVICE_TOKEN: ${MODEL_SERVICE_TOKEN:-dev-model-token-change-me}
+      MODEL_REQUEST_TIMEOUT_SEC: ${MODEL_REQUEST_TIMEOUT_SEC:-420}
+      MODEL_MAX_RETRIES: ${MODEL_MAX_RETRIES:-3}
+      MODEL_RETRY_DELAY_SEC: ${MODEL_RETRY_DELAY_SEC:-5}
+      MODEL_HEALTH_TIMEOUT_SEC: ${MODEL_HEALTH_TIMEOUT_SEC:-5}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost,http://localhost:80}
+    depends_on:
+      model-service:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    networks:
+      - app-network
+
+volumes:
+  model-cache:
+
+networks:
+  app-network:
+    driver: bridge
