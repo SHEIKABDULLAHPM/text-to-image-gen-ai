@@ -9,6 +9,7 @@ on:
 jobs:
   docker-build-check:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,6 +24,8 @@ jobs:
           file: ./backend/Dockerfile
           push: false
           tags: text-to-image-gen-ai/backend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Build model-service image
         uses: docker/build-push-action@v6
@@ -31,6 +34,8 @@ jobs:
           file: ./model-service/Dockerfile
           push: false
           tags: text-to-image-gen-ai/model-service:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Build frontend image
         uses: docker/build-push-action@v6
@@ -41,3 +46,5 @@ jobs:
           build-args: |
             VITE_API_BASE_URL=/api
           tags: text-to-image-gen-ai/frontend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -9,6 +9,7 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     permissions:
       contents: read
       packages: write
@@ -23,6 +24,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Prepare image namespace
+        id: prep
+        run: |
+          OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "owner_lc=$OWNER_LC" >> "$GITHUB_OUTPUT"
+
       - name: Build and push backend
         uses: docker/build-push-action@v6
         with:
@@ -30,8 +37,10 @@ jobs:
           file: ./backend/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/text-to-image-gen-ai-backend:latest
-            ghcr.io/${{ github.repository_owner }}/text-to-image-gen-ai-backend:${{ github.ref_name }}
+            ghcr.io/${{ steps.prep.outputs.owner_lc }}/text-to-image-gen-ai-backend:latest
+            ghcr.io/${{ steps.prep.outputs.owner_lc }}/text-to-image-gen-ai-backend:${{ github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Build and push model-service
         uses: docker/build-push-action@v6
@@ -40,8 +49,10 @@ jobs:
           file: ./model-service/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/text-to-image-gen-ai-model-service:latest
-            ghcr.io/${{ github.repository_owner }}/text-to-image-gen-ai-model-service:${{ github.ref_name }}
+            ghcr.io/${{ steps.prep.outputs.owner_lc }}/text-to-image-gen-ai-model-service:latest
+            ghcr.io/${{ steps.prep.outputs.owner_lc }}/text-to-image-gen-ai-model-service:${{ github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Build and push frontend
         uses: docker/build-push-action@v6
@@ -52,5 +63,7 @@ jobs:
           build-args: |
             VITE_API_BASE_URL=/api
           tags: |
-            ghcr.io/${{ github.repository_owner }}/text-to-image-gen-ai-frontend:latest
-            ghcr.io/${{ github.repository_owner }}/text-to-image-gen-ai-frontend:${{ github.ref_name }}
+            ghcr.io/${{ steps.prep.outputs.owner_lc }}/text-to-image-gen-ai-frontend:latest
+            ghcr.io/${{ steps.prep.outputs.owner_lc }}/text-to-image-gen-ai-frontend:${{ github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
